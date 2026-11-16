@@ -37,7 +37,11 @@ The raw data is **not** in this repository (about 152 GB, and the licence asks u
   [kooaslansefat/capture-24-human-activity-recognition](https://www.kaggle.com/datasets/kooaslansefat/capture-24-human-activity-recognition).
   It contains one CSV per participant (`P001.csv` … `P151.csv`: `time, x, y, z, annotation`),
   `annotation-label-dictionary.csv` and `metadata.csv` (age group, sex).
-- You need a (free) Kaggle account to attach it to a notebook.
+- **Our preprocessed features (public):**
+  [nityanandkarmali/capture24-features](https://www.kaggle.com/datasets/nityanandkarmali/capture24-features)
+  holds `capture24_features.parquet` and `stats.csv` exactly as produced by our preprocessing
+  notebook, so the modelling can be checked without rerunning preprocessing.
+- You need a (free) Kaggle account to attach these to a notebook.
 
 ## How to reproduce
 
@@ -46,7 +50,13 @@ Both notebooks are public on Kaggle and run there with no setup:
 - Preprocessing: https://www.kaggle.com/code/nityanandkarmali/preprocessing
 - Modelling: https://www.kaggle.com/code/nityanandkarmali/modelling
 
-**Steps**
+**Shortcut (check the modelling only, about 1 hour):** open the modelling notebook → **Copy & Edit**.
+It already uses our public features dataset as input
+([capture24-features](https://www.kaggle.com/datasets/nityanandkarmali/capture24-features));
+if it is not attached, use **Add Input** → search `capture24-features`. Then
+**Save Version → Save & Run All**.
+
+**Full reproduction from raw data**
 
 1. **Preprocessing (about 1 hour, CPU only).** Open the preprocessing notebook → **Copy & Edit**.
    Check that the CAPTURE-24 Kaggle dataset is attached (**Add Input** → search
