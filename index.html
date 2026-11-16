@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity Recognition for Unseen Users</title>
+<meta name="description" content="ES 335 project: recognising sleep, sedentary, light and moderate-vigorous activity from wrist accelerometer data for people the model has never seen, and how much a compact model gives up.">
+<link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <p class="eyebrow">ES 335 · Machine Learning · Course project</p>
+    <h1>Wrist-worn activity recognition for unseen users</h1>
+    <p class="lede">Can a simple model tell <b>sleep</b>, <b>sedentary</b>, <b>light</b> and <b>moderate-vigorous</b> activity apart from 10 seconds of wrist-accelerometer data, for people it has never seen? And how much accuracy does a compact model give up compared with a larger one?</p>
+    <p class="byline"><span id="team">Nityanand Karmali · Amartya Tuljapurkar</span></p>
+    <nav class="toc" aria-label="Sections">
+      <a href="#results">Results</a><a href="#budget">Feature budget</a><a href="#people">People</a><a href="#leakage">Leakage</a><a href="#data-enough">More data?</a><a href="#method">Method</a><a href="#limits">Limits</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="load-error" class="notice" hidden></div>
+
+  <section class="tiles" id="tiles" aria-label="Headline numbers"></section>
+
+  <section id="setup">
+    <h2>The task in one picture</h2>
+    <div class="steps">
+      <div class="step"><span class="step-n">1</span><h3>Raw signal</h3><p>151 adults wore an Axivity AX3 on the wrist for about a day each: x, y, z acceleration at 100 Hz, about 152 GB in total (CAPTURE-24).</p></div>
+      <div class="step"><span class="step-n">2</span><h3>10-second windows</h3><p>We cut the signal into non-overlapping 10 s windows (1,000 samples) and keep the 934,776 that have a label from wearable-camera images or sleep diaries.</p></div>
+      <div class="step"><span class="step-n">3</span><h3>16 features</h3><p>Mean, standard deviation, minimum and maximum of x, y, z and of the magnitude √(x²+y²+z²). No participant ID, age or sex goes into the model.</p></div>
+      <div class="step"><span class="step-n">4</span><h3>New people only</h3><p>Train on participants P001–P101, test once on the 50 people P102–P151 the models never saw. Every choice before that used cross-validation grouped by person.</p></div>
+    </div>
+    <div class="legend-row" id="class-legend" aria-label="Activity classes"></div>
+  </section>
+
+  <section id="results">
+    <h2>How good is each model on new people?</h2>
+    <p class="sub">Macro-F1 on the 50 test participants (each class counts equally). Lines are 95% intervals from resampling the 50 <em>people</em>, not the windows, because windows from one person are strongly correlated.</p>
+    <div class="card">
+      <div class="chart" id="chart-models" role="img" aria-label="Test macro-F1 with 95% intervals for four models"></div>
+      <details class="table-view"><summary>Show as table</summary><div id="table-models"></div></details>
+    </div>
+    <p id="diff-text" class="callout"></p>
+
+    <h3 class="h3">Where do the mistakes go?</h3>
+    <p class="sub">Pick a model. Each row is the true class and shows where its windows were predicted, so rows add up to 100%. Hover a cell for the window count.</p>
+    <div class="controls">
+      <div class="seg" id="cm-model" role="radiogroup" aria-label="Model"></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div id="cm-main"></div></div>
+      <div class="card"><h4 class="card-title">Recall by class</h4><div class="chart" id="recall-main"></div></div>
+    </div>
+    <p class="note">Most errors are between neighbouring intensity levels: sedentary predicted as light is the single biggest confusion. Sleep and moderate-vigorous are almost never mixed up.</p>
+  </section>
+
+  <section id="budget">
+    <h2>Feature budget: how few features are enough?</h2>
+    <p class="sub">Features are ranked by random-forest importance on the training people. Slide to keep only the top <i>k</i>. The <b>solid line</b> is cross-validation on training people (used to pick the compact budget, with a band of ±1 standard deviation); the <b>dashed line</b> is the test set, shown for information only. These models are trained on a 10% subsample of windows, so at <i>k</i> = 16 they differ slightly from the headline models above.</p>
+    <div class="controls">
+      <div class="seg" id="bud-model" role="radiogroup" aria-label="Model"></div>
+      <label class="slider"><span>Features kept: <output id="k-out">8</output> of 16</span>
+        <input type="range" id="k" min="1" max="16" value="8" step="1" aria-label="Number of features kept"></label>
+      <button class="btn" id="k-compact" type="button">Jump to compact budget</button>
+    </div>
+    <div class="readout" id="bud-readout" aria-live="polite"></div>
+    <div class="chips" id="chips" aria-label="Features in ranked order"></div>
+    <div class="card"><div class="legend-row" id="bud-legend" style="margin:0 0 8px"></div><div class="chart" id="chart-budget"></div></div>
+    <div class="grid-2">
+      <div class="card"><h4 class="card-title">Recall by class at <span class="k-label">k</span> features <span class="muted">(tick = all 16)</span></h4><div class="chart" id="recall-budget"></div></div>
+      <div class="card"><h4 class="card-title">Confusion at <span class="k-label">k</span> features</h4><div id="cm-budget"></div></div>
+    </div>
+    <div class="card"><h4 class="card-title">Compact versus full, side by side</h4><div id="table-compact"></div></div>
+    <p class="note" id="budget-note"></p>
+  </section>
+
+  <section id="people">
+    <h2>Does it work equally well for everyone?</h2>
+    <p class="sub">Each dot is one test person (shuffled and unnamed). Click a dot or use the list to see that person's activity mix and how well each of their classes was recognised by the random forest.</p>
+    <div class="controls">
+      <label class="select"><span>Person</span><select id="person-select"></select></label>
+      <div class="seg" id="person-sort" role="radiogroup" aria-label="Pick"></div>
+    </div>
+    <div class="card"><div class="chart" id="chart-people"></div></div>
+    <div class="card" id="person-detail" aria-live="polite"></div>
+    <h3 class="h3">Groups</h3>
+    <p class="sub">Group-level results only. With 9 to 34 people per group, these differences are descriptive, not evidence of bias.</p>
+    <div class="card"><div id="table-groups"></div></div>
+  </section>
+
+  <section id="leakage">
+    <h2>Why we split by person</h2>
+    <p class="sub">Same models, same training data, two ways of cross-validating. A random split puts windows from the same person in both training and validation, so a flexible model gets credit for recognising <em>people</em> rather than activities.</p>
+    <div class="card"><div class="chart" id="chart-leak"></div></div>
+    <p class="note" id="leak-note"></p>
+  </section>
+
+  <section id="data-enough">
+    <h2>Would more people help?</h2>
+    <p class="sub">Inside the training set: 20 people held out for validation, and the forest trained on 5 to 81 of the others (3 random draws each, one at 81).</p>
+    <div class="grid-2">
+      <div class="card"><div class="chart" id="chart-lc"></div></div>
+      <div class="card stack">
+        <h4 class="card-title">Recording-gap check</h4>
+        <div id="sens"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="method">
+    <h2>Method</h2>
+    <div class="cols">
+      <div>
+        <h3>Models</h3>
+        <ul>
+          <li><b>Majority class</b>: always predicts the most common class (the floor).</li>
+          <li><b>Logistic regression</b>: linear baseline, features standardised inside each training fold.</li>
+          <li><b>Decision tree</b>, depth ≤ 6: the compact model; readable threshold rules.</li>
+          <li><b>Random forest</b>: the larger model; many deep trees averaged.</li>
+        </ul>
+        <p>All use balanced class weights so the rare moderate-vigorous class is not ignored. Settings are chosen by 5-fold <code>GroupKFold</code> (grouped by person) on every 10th training window.</p>
+        <p id="best-params"></p>
+      </div>
+      <div>
+        <h3>Evaluation</h3>
+        <ul>
+          <li><b>Split:</b> CAPTURE-24 benchmark split, P001–P101 train, P102–P151 test. No person is in both.</li>
+          <li><b>Metric:</b> macro-F1, plus balanced accuracy, per-class recall and confusion matrices. Plain accuracy would reward predicting sleep and sedentary.</li>
+          <li><b>Test set used once.</b> Every choice (settings, feature budget, which model is compact) came from cross-validation on training people.</li>
+          <li><b>Uncertainty:</b> 1,000 bootstrap resamples of the 50 test people; model differences use paired resamples.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="limits">
+    <h2>Limitations</h2>
+    <ul class="limits">
+      <li><b>Only 50 test people.</b> Intervals are wide, and individual results range widely.</li>
+      <li><b>Rare class.</b> Moderate-vigorous is 4–6% of windows; 27 of 151 people have under 0.5%. Its F1 is the lowest, and many of its predictions are false alarms.</li>
+      <li><b>Simple features.</b> 16 summary statistics lose rhythm and frequency information. Many sedentary windows predicted as light really do move like light activity.</li>
+      <li><b>Windows are classified one at a time.</b> Activities follow each other in time; smoothing over neighbouring windows (as the CAPTURE-24 benchmark does with an HMM) is future work.</li>
+      <li><b>Label noise.</b> Labels come from camera images and diaries, and about a third of windows had no label, so results describe labelled time only.</li>
+      <li><b>Scope.</b> One device on the wrist, adults in one free-living study. Results say nothing about other devices or populations, and predictions are not causal explanations.</li>
+    </ul>
+  </section>
+
+  <section id="figures-sec" hidden>
+    <h2>Notebook figures</h2>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <section id="reproduce">
+    <h2>Reproduce and credits</h2>
+    <p id="links"></p>
+    <p><b>Data:</b> CAPTURE-24 (Chan et al., <i>Scientific Data</i> 2024; Oxford Research Archive, <a href="https://doi.org/10.5287/bodleian:NGx0JOMP5">DOI 10.5287/bodleian:NGx0JOMP5</a>, CC BY 4.0), used through a Kaggle copy. The train/test split, 10 s windows and Walmsley2020 label grouping follow the <a href="https://github.com/OxWearables/capture24">CAPTURE-24 benchmark</a>. Raw data is not re-published here, and no participant IDs or personal details are shown next to individual results.</p>
+    <p><b>AI use:</b> we used Claude (Anthropic) for brainstorming, code drafting, debugging and help with wording and this website. We ran every step ourselves and can explain it.</p>
+  </section>
+</main>
+
+<footer class="site-footer"><div class="wrap">ES 335 course project · <span id="team-foot"></span></div></footer>
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<script src="app.js?v=4"></script>
+</body>
+</html>

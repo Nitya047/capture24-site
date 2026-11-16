@@ -1,0 +1,18 @@
+[
+ {
+  "model": "logistic",
+  "random_split": 0.6211925009772884,
+  "participant_split": 0.6140936913338013,
+  "random_std": 0.005909712102579367,
+  "participant_std": 0.02808294196043852,
+  "inflation": 0.007098809643487081
+ },
+ {
+  "model": "forest",
+  "random_split": 0.7429374346892444,
+  "participant_split": 0.6620354189066983,
+  "random_std": 0.00789973879574093,
+  "participant_std": 0.02822748831931279,
+  "inflation": 0.08090201578254619
+ }
+]
