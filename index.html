@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Activity Recognition for Unseen Users</title>
 <meta name="description" content="ES 335 project: recognising sleep, sedentary, light and moderate-vigorous activity from wrist accelerometer data for people the model has never seen, and how much a compact model gives up.">
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 <header class="site-header">
   <div class="wrap">
     <p class="eyebrow">ES 335 · Machine Learning · Course project</p>
     <h1>Wrist-worn activity recognition for unseen users</h1>
+    <p class="subtitle">Comparing simple and compact models</p>
     <p class="lede">Can a simple model tell <b>sleep</b>, <b>sedentary</b>, <b>light</b> and <b>moderate-vigorous</b> activity apart from 10 seconds of wrist-accelerometer data, for people it has never seen? And how much accuracy does a compact model give up compared with a larger one?</p>
     <p class="byline"><span id="team">Nityanand Karmali · Amartya Tuljapurkar</span></p>
     <nav class="toc" aria-label="Sections">
@@ -27,7 +28,8 @@
 
   <section id="setup">
     <h2>The question and the unit of analysis</h2>
-    <p class="sub"><b>One row of our data is one non-overlapping 10-second window</b> of one person's wrist acceleration (1,000 samples at 100 Hz), described by 16 numbers. The target is the activity class that covers most of that window. The model predicts each window on its own, using only that window's 16 features: no participant ID, no age or sex, no neighbouring windows.</p>
+    <p class="sub"><b>One row of our data is one non-overlapping 10-second window</b> of one person's wrist acceleration (1,000 samples at 100 Hz), described by 16 numbers. The target is the activity class that covers most of that window. The model predicts each window on its own, using only that window's 16 features: no participant ID, no age or sex, no neighbouring windows. So the information available at prediction time is just the last 10 seconds of wrist movement.</p>
+    <p class="sub"><b>Limits of the claim:</b> results apply to new adults wearing the same wrist device (Axivity AX3) in this study's free-living setting. They say nothing about other devices, wear positions or populations, and the models predict activity; they do not explain it causally.</p>
     <div class="steps">
       <div class="step"><span class="step-n">1</span><h3>Raw signal</h3><p>151 adults wore an Axivity AX3 on the wrist for about a day each: x, y, z acceleration at 100 Hz, about 152 GB in total (CAPTURE-24).</p></div>
       <div class="step"><span class="step-n">2</span><h3>10-second windows</h3><p>We cut the signal into non-overlapping 10 s windows and keep the 934,776 that have a label from wearable-camera images or sleep diaries.</p></div>
@@ -50,6 +52,7 @@
           <tr><td>Windows per person</td><td>median 6,259 (range 2,214–9,009)</td></tr>
           <tr><td>Labels</td><td>over 200 fine-grained annotations → 4 classes via the dataset's <code>label:Walmsley2020</code> column</td></tr>
           <tr><td>Metadata</td><td>age group and sex (used only for the group audit, never as model input)</td></tr>
+          <tr><td>Access limits</td><td>Raw data must be obtained from the Oxford archive or Kaggle (free account); the camera images behind the labels are not released, so labels cannot be re-checked; only age group and sex are available about participants</td></tr>
         </tbody></table></div>
       </div>
       <div class="card">
@@ -90,6 +93,7 @@
       <tr><td>Classes</td><td>4 classes from <code>label:Walmsley2020</code></td><td>The 200+ fine labels are too sparse to learn. The 4 intensity levels are the dataset's own grouping and are used in published work.</td></tr>
       <tr><td>Unlabelled windows</td><td>Dropped</td><td>Without a label they can neither train nor score a model.</td></tr>
       <tr><td>Features</td><td>Mean, std, min, max of x, y, z and magnitude (16)</td><td>Cheap, interpretable and small enough for the whole dataset to fit in memory. The magnitude does not depend on how the device is rotated, and the standard deviations measure how much the wrist moves.</td></tr>
+      <tr><td>Feature ranking</td><td>Re-done inside every training fold</td><td>Choosing features with validation or test data would leak information into the score.</td></tr>
       <tr><td>Inputs left out</td><td>No participant ID, age or sex</td><td>The model must work for people it has never seen, so it must not learn who someone is.</td></tr>
       <tr><td>Scaling</td><td>Only for logistic regression, inside a pipeline</td><td>Trees do not need scaling. Fitting the scaler on each training fold only keeps validation and test data out of it.</td></tr>
       <tr><td>Imbalance</td><td><code>class_weight="balanced"</code></td><td>Moderate-vigorous is 4–6% of windows; without weighting the models would mostly ignore it.</td></tr>
@@ -266,6 +270,6 @@
 
 <footer class="site-footer"><div class="wrap">ES 335 course project · <span id="team-foot"></span></div></footer>
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

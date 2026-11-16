@@ -225,3 +225,4 @@ table.kv td:first-child { color: var(--ink-2); white-space: nowrap; padding-righ
   table.why td:nth-child(2)::before { content: "What: "; color: var(--muted); }
   table.why td:nth-child(3)::before { content: "Why: "; color: var(--muted); }
 }
+.subtitle { margin: -6px 0 14px; font-size: clamp(18px, 2.4vw, 22px); color: var(--ink-2); font-weight: 500; }
