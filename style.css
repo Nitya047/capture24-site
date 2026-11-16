@@ -200,3 +200,28 @@ details.table-view summary { cursor: pointer; color: var(--ink-2); font-size: 14
 @media (forced-colors: active) {
   .sw, .stackbar div, .cm .cell { forced-color-adjust: none; }
 }
+
+/* added sections */
+.issues { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.issue { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--ink-2); }
+.issue b { color: var(--ink); display: block; margin-bottom: 2px; }
+.fig { margin: 0 0 16px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 8px; }
+.fig img { width: 100%; height: auto; display: block; }
+.fig figcaption { color: #52514e; font-size: 13px; padding: 6px 4px 0; }
+.grid-2 > .fig { margin: 0; }
+table.why td { text-align: left; vertical-align: top; }
+table.why td:first-child { font-weight: 600; white-space: nowrap; }
+table.why td:nth-child(2) { min-width: 160px; }
+table.why td:nth-child(3) { color: var(--ink-2); min-width: 260px; }
+table.why th { text-align: left; }
+tr.muted-row td { color: var(--muted); }
+table.kv td { text-align: left; vertical-align: top; }
+table.kv td:first-child { color: var(--ink-2); white-space: nowrap; padding-right: 16px; }
+@media (max-width: 640px) {
+  table.why thead { display: none; }
+  table.why, table.why tbody, table.why tr, table.why td { display: block; width: 100%; min-width: 0 !important; }
+  table.why tr { border-bottom: 1px solid var(--grid); padding: 8px 0; }
+  table.why td { border: 0; padding: 2px 0; white-space: normal !important; }
+  table.why td:nth-child(2)::before { content: "What: "; color: var(--muted); }
+  table.why td:nth-child(3)::before { content: "Why: "; color: var(--muted); }
+}

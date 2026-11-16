@@ -1,0 +1,5 @@
+model,train_macro_f1,test_macro_f1,balanced_acc,accuracy,recall_sleep,recall_sedentary,recall_light,recall_moderate-vigorous,gap
+majority,0.1448,0.1362,0.25,0.3743,0.0,1.0,0.0,0.0,0.0086
+logistic,0.617,0.6311,0.6688,0.6809,0.958,0.4933,0.5418,0.6819,-0.0141
+tree,0.6542,0.6727,0.6986,0.7408,0.9102,0.723,0.5061,0.6552,-0.0185
+forest,0.7281,0.7001,0.7262,0.7567,0.8973,0.7091,0.6239,0.6745,0.028

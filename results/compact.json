@@ -1,0 +1,30 @@
+[
+ {
+  "model": "forest",
+  "k": 16,
+  "cv_macro_f1": 0.696934672491736,
+  "test_macro_f1": 0.7133748722144645,
+  "recall_mv": 0.605
+ },
+ {
+  "model": "forest",
+  "k": 8,
+  "cv_macro_f1": 0.6898203288966406,
+  "test_macro_f1": 0.7065484497650252,
+  "recall_mv": 0.6266
+ },
+ {
+  "model": "tree",
+  "k": 16,
+  "cv_macro_f1": 0.6279798562060923,
+  "test_macro_f1": 0.6662958680839346,
+  "recall_mv": 0.6588
+ },
+ {
+  "model": "tree",
+  "k": 3,
+  "cv_macro_f1": 0.6434986043909772,
+  "test_macro_f1": 0.6706686443640569,
+  "recall_mv": 0.6622
+ }
+]

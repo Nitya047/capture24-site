@@ -1,0 +1,67 @@
+[
+ {
+  "people": 5,
+  "windows": 3264,
+  "val_macro_f1": 0.589209811534136
+ },
+ {
+  "people": 5,
+  "windows": 2971,
+  "val_macro_f1": 0.5538639127726976
+ },
+ {
+  "people": 5,
+  "windows": 2690,
+  "val_macro_f1": 0.5620143673730829
+ },
+ {
+  "people": 10,
+  "windows": 6503,
+  "val_macro_f1": 0.6550413778578978
+ },
+ {
+  "people": 10,
+  "windows": 6030,
+  "val_macro_f1": 0.6495680739086763
+ },
+ {
+  "people": 10,
+  "windows": 6293,
+  "val_macro_f1": 0.5891304658205013
+ },
+ {
+  "people": 20,
+  "windows": 13035,
+  "val_macro_f1": 0.6685950072392159
+ },
+ {
+  "people": 20,
+  "windows": 12933,
+  "val_macro_f1": 0.666031876626964
+ },
+ {
+  "people": 20,
+  "windows": 13037,
+  "val_macro_f1": 0.643337097703044
+ },
+ {
+  "people": 40,
+  "windows": 25456,
+  "val_macro_f1": 0.6606749723309725
+ },
+ {
+  "people": 40,
+  "windows": 25876,
+  "val_macro_f1": 0.6866685544751405
+ },
+ {
+  "people": 40,
+  "windows": 24557,
+  "val_macro_f1": 0.6823930099553431
+ },
+ {
+  "people": 81,
+  "windows": 51338,
+  "val_macro_f1": 0.6744319028146715
+ }
+]

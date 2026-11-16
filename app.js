@@ -470,7 +470,7 @@ function renderMethodBits() {
   if (bp.logistic) parts.push(`logistic C = ${bp.logistic.logisticregression__C}`);
   if (bp.tree) parts.push(`tree depth ${bp.tree.max_depth}, minimum leaf ${pct(bp.tree.min_samples_leaf, 1)} of rows`);
   if (bp.forest) parts.push(`forest max_features = ${bp.forest.max_features}, minimum leaf ${pct(bp.forest.min_samples_leaf, 2)} of rows`);
-  $("#best-params").innerHTML = parts.length ? `<b>Chosen settings:</b> ${esc(parts.join("; "))}.` : "";
+  if ($("#best-params")) $("#best-params").innerHTML = parts.length ? `<b>Chosen settings:</b> ${esc(parts.join("; "))}.` : "";
   const L = [];
   if (LINKS.modelling) L.push(`<a href="${esc(LINKS.modelling)}">Modelling notebook (Kaggle)</a>`);
   if (LINKS.preprocessing) L.push(`<a href="${esc(LINKS.preprocessing)}">Preprocessing notebook (Kaggle)</a>`);

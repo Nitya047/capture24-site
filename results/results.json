@@ -1,0 +1,294 @@
+{
+ "models": [
+  {
+   "model": "majority",
+   "train_macro_f1": 0.1448,
+   "test_macro_f1": 0.1362,
+   "balanced_acc": 0.25,
+   "accuracy": 0.3743,
+   "recall_sleep": 0.0,
+   "recall_sedentary": 1.0,
+   "recall_light": 0.0,
+   "recall_moderate-vigorous": 0.0,
+   "gap": 0.0086
+  },
+  {
+   "model": "logistic",
+   "train_macro_f1": 0.617,
+   "test_macro_f1": 0.6311,
+   "balanced_acc": 0.6688,
+   "accuracy": 0.6809,
+   "recall_sleep": 0.958,
+   "recall_sedentary": 0.4933,
+   "recall_light": 0.5418,
+   "recall_moderate-vigorous": 0.6819,
+   "gap": -0.0141
+  },
+  {
+   "model": "tree",
+   "train_macro_f1": 0.6542,
+   "test_macro_f1": 0.6727,
+   "balanced_acc": 0.6986,
+   "accuracy": 0.7408,
+   "recall_sleep": 0.9102,
+   "recall_sedentary": 0.723,
+   "recall_light": 0.5061,
+   "recall_moderate-vigorous": 0.6552,
+   "gap": -0.0185
+  },
+  {
+   "model": "forest",
+   "train_macro_f1": 0.7281,
+   "test_macro_f1": 0.7001,
+   "balanced_acc": 0.7262,
+   "accuracy": 0.7567,
+   "recall_sleep": 0.8973,
+   "recall_sedentary": 0.7091,
+   "recall_light": 0.6239,
+   "recall_moderate-vigorous": 0.6745,
+   "gap": 0.028
+  }
+ ],
+ "ci": [
+  {
+   "model": "majority",
+   "macro_f1": 0.1362,
+   "ci_low": 0.126,
+   "ci_high": 0.1458
+  },
+  {
+   "model": "logistic",
+   "macro_f1": 0.6311,
+   "ci_low": 0.6034,
+   "ci_high": 0.6582
+  },
+  {
+   "model": "tree",
+   "macro_f1": 0.6727,
+   "ci_low": 0.6491,
+   "ci_high": 0.6951
+  },
+  {
+   "model": "forest",
+   "macro_f1": 0.7001,
+   "ci_low": 0.6731,
+   "ci_high": 0.7256
+  }
+ ],
+ "paired_differences": [
+  {
+   "comparison": "forest - logistic",
+   "diff": 0.069,
+   "ci_low": 0.058,
+   "ci_high": 0.0803
+  },
+  {
+   "comparison": "forest - tree",
+   "diff": 0.0274,
+   "ci_low": 0.0137,
+   "ci_high": 0.0414
+  },
+  {
+   "comparison": "tree - logistic",
+   "diff": 0.0416,
+   "ci_low": 0.025,
+   "ci_high": 0.0581
+  },
+  {
+   "comparison": "logistic - majority",
+   "diff": 0.4949,
+   "ci_low": 0.4629,
+   "ci_high": 0.5261
+  }
+ ],
+ "best_params": {
+  "majority": {},
+  "logistic": {
+   "logisticregression__C": 10
+  },
+  "tree": {
+   "max_depth": 5,
+   "min_samples_leaf": 0.001
+  },
+  "forest": {
+   "max_features": "sqrt",
+   "min_samples_leaf": 0.0002
+  }
+ },
+ "classes": [
+  "sleep",
+  "sedentary",
+  "light",
+  "moderate-vigorous"
+ ],
+ "confusion": {
+  "majority": [
+   [
+    0,
+    107890,
+    0,
+    0
+   ],
+   [
+    0,
+    112804,
+    0,
+    0
+   ],
+   [
+    0,
+    62850,
+    0,
+    0
+   ],
+   [
+    0,
+    17807,
+    0,
+    0
+   ]
+  ],
+  "logistic": [
+   [
+    103360,
+    3321,
+    1062,
+    147
+   ],
+   [
+    36534,
+    55648,
+    17477,
+    3145
+   ],
+   [
+    3577,
+    13089,
+    34052,
+    12132
+   ],
+   [
+    208,
+    1384,
+    4072,
+    12143
+   ]
+  ],
+  "tree": [
+   [
+    98198,
+    7748,
+    1678,
+    266
+   ],
+   [
+    12061,
+    81559,
+    14527,
+    4657
+   ],
+   [
+    544,
+    19084,
+    31811,
+    11411
+   ],
+   [
+    28,
+    1540,
+    4572,
+    11667
+   ]
+  ],
+  "forest": [
+   [
+    96812,
+    9436,
+    1353,
+    289
+   ],
+   [
+    9893,
+    79992,
+    20234,
+    2685
+   ],
+   [
+    461,
+    11983,
+    39210,
+    11196
+   ],
+   [
+    17,
+    1010,
+    4770,
+    12010
+   ]
+  ]
+ },
+ "sensitivity": {
+  "gap_participants": [
+   "P008",
+   "P016",
+   "P017",
+   "P060",
+   "P077",
+   "P094",
+   "P097",
+   "P142"
+  ],
+  "forest_all_participants": 0.7007600273334089,
+  "forest_without_gap_participants": 0.7009624125353714
+ },
+ "groups": [
+  {
+   "attribute": "sex",
+   "group": "F",
+   "people": 34,
+   "windows": 209717,
+   "macro_f1": 0.7183,
+   "mean_person_balanced_acc": 0.7153
+  },
+  {
+   "attribute": "sex",
+   "group": "M",
+   "people": 16,
+   "windows": 91634,
+   "macro_f1": 0.6584,
+   "mean_person_balanced_acc": 0.7195
+  },
+  {
+   "attribute": "age",
+   "group": "18-29",
+   "people": 17,
+   "windows": 100772,
+   "macro_f1": 0.6964,
+   "mean_person_balanced_acc": 0.7151
+  },
+  {
+   "attribute": "age",
+   "group": "30-37",
+   "people": 10,
+   "windows": 62331,
+   "macro_f1": 0.7093,
+   "mean_person_balanced_acc": 0.74
+  },
+  {
+   "attribute": "age",
+   "group": "38-52",
+   "people": 14,
+   "windows": 86145,
+   "macro_f1": 0.7132,
+   "mean_person_balanced_acc": 0.7364
+  },
+  {
+   "attribute": "age",
+   "group": "53+",
+   "people": 9,
+   "windows": 52103,
+   "macro_f1": 0.6512,
+   "mean_person_balanced_acc": 0.6628
+  }
+ ]
+}

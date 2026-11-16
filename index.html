@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Activity Recognition for Unseen Users</title>
 <meta name="description" content="ES 335 project: recognising sleep, sedentary, light and moderate-vigorous activity from wrist accelerometer data for people the model has never seen, and how much a compact model gives up.">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <header class="site-header">
@@ -15,7 +15,7 @@
     <p class="lede">Can a simple model tell <b>sleep</b>, <b>sedentary</b>, <b>light</b> and <b>moderate-vigorous</b> activity apart from 10 seconds of wrist-accelerometer data, for people it has never seen? And how much accuracy does a compact model give up compared with a larger one?</p>
     <p class="byline"><span id="team">Nityanand Karmali · Amartya Tuljapurkar</span></p>
     <nav class="toc" aria-label="Sections">
-      <a href="#results">Results</a><a href="#budget">Feature budget</a><a href="#people">People</a><a href="#leakage">Leakage</a><a href="#data-enough">More data?</a><a href="#method">Method</a><a href="#limits">Limits</a>
+      <a href="#setup">Question</a><a href="#data">Data</a><a href="#prep">Preprocessing</a><a href="#method">Models &amp; evaluation</a><a href="#results">Results</a><a href="#budget">Feature budget</a><a href="#people">Error analysis</a><a href="#data-enough">More data?</a><a href="#limits">Limits</a><a href="#reproduce">Reproduce</a>
     </nav>
   </div>
 </header>
@@ -26,22 +26,127 @@
   <section class="tiles" id="tiles" aria-label="Headline numbers"></section>
 
   <section id="setup">
-    <h2>The task in one picture</h2>
+    <h2>The question and the unit of analysis</h2>
+    <p class="sub"><b>One row of our data is one non-overlapping 10-second window</b> of one person's wrist acceleration (1,000 samples at 100 Hz), described by 16 numbers. The target is the activity class that covers most of that window. The model predicts each window on its own, using only that window's 16 features: no participant ID, no age or sex, no neighbouring windows.</p>
     <div class="steps">
       <div class="step"><span class="step-n">1</span><h3>Raw signal</h3><p>151 adults wore an Axivity AX3 on the wrist for about a day each: x, y, z acceleration at 100 Hz, about 152 GB in total (CAPTURE-24).</p></div>
-      <div class="step"><span class="step-n">2</span><h3>10-second windows</h3><p>We cut the signal into non-overlapping 10 s windows (1,000 samples) and keep the 934,776 that have a label from wearable-camera images or sleep diaries.</p></div>
-      <div class="step"><span class="step-n">3</span><h3>16 features</h3><p>Mean, standard deviation, minimum and maximum of x, y, z and of the magnitude √(x²+y²+z²). No participant ID, age or sex goes into the model.</p></div>
+      <div class="step"><span class="step-n">2</span><h3>10-second windows</h3><p>We cut the signal into non-overlapping 10 s windows and keep the 934,776 that have a label from wearable-camera images or sleep diaries.</p></div>
+      <div class="step"><span class="step-n">3</span><h3>16 features</h3><p>Mean, standard deviation, minimum and maximum of x, y, z and of the magnitude √(x²+y²+z²).</p></div>
       <div class="step"><span class="step-n">4</span><h3>New people only</h3><p>Train on participants P001–P101, test once on the 50 people P102–P151 the models never saw. Every choice before that used cross-validation grouped by person.</p></div>
     </div>
     <div class="legend-row" id="class-legend" aria-label="Activity classes"></div>
   </section>
 
+  <section id="data">
+    <h2>The data</h2>
+    <p class="sub"><b>Source:</b> CAPTURE-24 (Chan et al., <i>Scientific Data</i> 2024, CC BY 4.0), a free-living study in which adults wore a wrist accelerometer for about 24 hours while a wearable camera and sleep diary recorded what they were doing. We used the <a href="https://www.kaggle.com/datasets/kooaslansefat/capture-24-human-activity-recognition">Kaggle copy of CAPTURE-24</a> (<code>kooaslansefat/capture-24-human-activity-recognition</code>).</p>
+    <div class="grid-2">
+      <div class="card">
+        <h4 class="card-title">Size and key variables</h4>
+        <div class="table-scroll"><table class="kv"><tbody>
+          <tr><td>Participants</td><td>151 (101 train, 50 test)</td></tr>
+          <tr><td>Raw data</td><td>x, y, z in g at 100 Hz · about 152 GB of CSV</td></tr>
+          <tr><td>Labelled 10 s windows</td><td>934,776 (633,425 train · 301,351 test)</td></tr>
+          <tr><td>Windows per person</td><td>median 6,259 (range 2,214–9,009)</td></tr>
+          <tr><td>Labels</td><td>over 200 fine-grained annotations → 4 classes via the dataset's <code>label:Walmsley2020</code> column</td></tr>
+          <tr><td>Metadata</td><td>age group and sex (used only for the group audit, never as model input)</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="card">
+        <h4 class="card-title">Class balance (windows)</h4>
+        <div class="table-scroll"><table><thead><tr><th>Class</th><th>Train</th><th>Test</th></tr></thead><tbody>
+          <tr><td>sleep</td><td>232,341 (36.7%)</td><td>107,890 (35.8%)</td></tr>
+          <tr><td>sedentary</td><td>258,283 (40.8%)</td><td>112,804 (37.4%)</td></tr>
+          <tr><td>light</td><td>115,160 (18.2%)</td><td>62,850 (20.9%)</td></tr>
+          <tr><td>moderate-vigorous</td><td>27,641 (4.4%)</td><td>17,807 (5.9%)</td></tr>
+        </tbody></table></div>
+        <p class="note" style="margin:8px 0 0">Moderate-vigorous is rare, so plain accuracy would hide failures on it. That is why we use macro-F1 and balanced class weights.</p>
+      </div>
+    </div>
+
+    <h3 class="h3">Quality issues we found</h3>
+    <div class="issues">
+      <div class="issue"><b>A third of windows have no label.</b> On average 33.2% of each person's windows (range 15.6–68.1%) had no camera or diary label and were dropped. Results describe labelled time only.</div>
+      <div class="issue"><b>Repeated samples.</b> On average 33.4% of consecutive samples are exactly identical (range 23.1–43.8%). We report it but cannot tell its cause from the data.</div>
+      <div class="issue"><b>Recording gaps.</b> 8 participants (7 train, 1 test) have more than 1% fewer samples than their recording time implies, up to 13.5% fewer, so some of their windows span more than 10 s. A sensitivity check shows this does not change the result.</div>
+      <div class="issue"><b>Very uneven rare class.</b> The moderate-vigorous share per person ranges from 0% to 24%, and 27 of 151 people have under 0.5%. Per-person recall on that class is unreliable for them.</div>
+      <div class="issue"><b>What was clean.</b> No missing feature values, every raw label is in the dictionary, and no pair of features has |correlation| above 0.9.</div>
+    </div>
+
+    <h3 class="h3">What the features show (training people only)</h3>
+    <p class="sub">Median movement variability (m_std, the standard deviation of the magnitude) rises steadily with intensity: sleep 0.005, sedentary 0.033, light 0.154, moderate-vigorous 0.277. Sleep is well separated, but sedentary overlaps both sleep (very still sitting) and light, and light overlaps moderate-vigorous. So we expected most mistakes between neighbouring intensity levels.</p>
+    <div class="grid-2">
+      <figure class="fig"><a href="data/figures/data_overview.png" target="_blank" rel="noopener"><img src="data/figures/data_overview.png" alt="Bar chart of windows per class, histogram of windows per participant, histogram of moderate-vigorous share per participant"></a><figcaption>Windows per class, windows per person, and moderate-vigorous share per person (click to enlarge).</figcaption></figure>
+      <figure class="fig"><a href="data/figures/features_by_class.png" target="_blank" rel="noopener"><img src="data/figures/features_by_class.png" alt="Distribution of movement variability by class, and feature correlation heatmap"></a><figcaption>Movement variability by class, and correlations between the 16 features (click to enlarge).</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="prep">
+    <h2>Preprocessing choices, and why</h2>
+    <p class="sub">All of this runs in the <code>preprocessing</code> notebook, which turns 152 GB of raw CSV into a 60 MB feature table. The modelling choices that guard against leakage are in the next section.</p>
+    <div class="card"><div class="table-scroll"><table class="why"><thead><tr><th>Choice</th><th>What we did</th><th>Why</th></tr></thead><tbody>
+      <tr><td>Window</td><td>10 s, non-overlapping (1,000 samples)</td><td>Same as the CAPTURE-24 benchmark. Long enough to contain several steps or gestures, short enough to usually cover one activity. Non-overlapping windows avoid near-duplicate rows.</td></tr>
+      <tr><td>Window label</td><td>Most frequent label inside the window</td><td>A window that straddles two activities gets the one that covers most of it (benchmark rule).</td></tr>
+      <tr><td>Classes</td><td>4 classes from <code>label:Walmsley2020</code></td><td>The 200+ fine labels are too sparse to learn. The 4 intensity levels are the dataset's own grouping and are used in published work.</td></tr>
+      <tr><td>Unlabelled windows</td><td>Dropped</td><td>Without a label they can neither train nor score a model.</td></tr>
+      <tr><td>Features</td><td>Mean, std, min, max of x, y, z and magnitude (16)</td><td>Cheap, interpretable and small enough for the whole dataset to fit in memory. The magnitude does not depend on how the device is rotated, and the standard deviations measure how much the wrist moves.</td></tr>
+      <tr><td>Inputs left out</td><td>No participant ID, age or sex</td><td>The model must work for people it has never seen, so it must not learn who someone is.</td></tr>
+      <tr><td>Scaling</td><td>Only for logistic regression, inside a pipeline</td><td>Trees do not need scaling. Fitting the scaler on each training fold only keeps validation and test data out of it.</td></tr>
+      <tr><td>Imbalance</td><td><code>class_weight="balanced"</code></td><td>Moderate-vigorous is 4–6% of windows; without weighting the models would mostly ignore it.</td></tr>
+      <tr><td>Tuning data</td><td>Every 10th window of each training person (63,385 rows, all 101 people)</td><td>Neighbouring windows are near-duplicates, so this keeps the variety while making grid search about 10 times faster.</td></tr>
+      <tr><td>Gap participants</td><td>Kept</td><td>Dropping them changes test macro-F1 by only 0.0002 (sensitivity check below).</td></tr>
+    </tbody></table></div></div>
+  </section>
+
+  <section id="method">
+    <h2>Baseline, models and evaluation</h2>
+    <div class="cols">
+      <div>
+        <h3>Models compared</h3>
+        <ul>
+          <li><b>Majority class</b> (baseline): always predicts the most common class, the floor any model must beat.</li>
+          <li><b>Logistic regression</b>: linear, fast, interpretable; a natural first model for 16 numeric features.</li>
+          <li><b>Decision tree</b>, depth ≤ 6: the <b>compact</b> model, a handful of readable threshold rules.</li>
+          <li><b>Random forest</b>: the <b>larger</b> model; averages many deep trees and handles non-linear interactions.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>How we evaluated</h3>
+        <ul>
+          <li><b>Split by person:</b> CAPTURE-24 benchmark split, P001–P101 train, P102–P151 test. No person is in both.</li>
+          <li><b>Tuning:</b> 5-fold <code>GroupKFold</code> with the person as the group, on training people only.</li>
+          <li><b>Metric:</b> macro-F1 (every class counts equally), plus balanced accuracy, per-class recall and confusion matrices.</li>
+          <li><b>Test set used once.</b> Settings, feature budget and which model is "compact" were all chosen from cross-validation.</li>
+          <li><b>Uncertainty:</b> 1,000 bootstrap resamples of the 50 test <em>people</em>; model differences use paired resamples.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="h3">Tuning and overfitting (cross-validation on training people)</h3>
+    <div class="card"><div class="table-scroll"><table><thead><tr><th>Model</th><th>Grid searched</th><th>Chosen</th><th>CV macro-F1</th><th>Train macro-F1</th></tr></thead><tbody>
+      <tr><td>Majority</td><td>none</td><td>none</td><td>0.145</td><td>0.145</td></tr>
+      <tr><td>Logistic regression</td><td>C ∈ {0.01, 0.1, 1, 10}</td><td>C = 10</td><td>0.614</td><td>0.623</td></tr>
+      <tr><td>Decision tree</td><td>depth 2–6, min. leaf 0.1% of rows</td><td>depth 5</td><td>0.628</td><td>0.643</td></tr>
+      <tr><td>Random forest</td><td>min. leaf {0.005%, 0.02%, 0.1%} × max_features {sqrt, 0.5}</td><td>sqrt, 0.02%</td><td>0.697</td><td>0.831</td></tr>
+      <tr class="muted-row"><td>↳ forest, smallest leaves</td><td></td><td>not chosen</td><td>0.685</td><td>0.953</td></tr>
+      <tr class="muted-row"><td>↳ forest, largest leaves</td><td></td><td>not chosen</td><td>0.679</td><td>0.725</td></tr>
+    </tbody></table></div>
+    <p class="note" style="margin:8px 0 0">Logistic regression barely changes with C (0.607–0.614), so regularisation is not what limits it. The tree stops improving after depth 5, so we keep the smaller tree. The forest with the smallest leaves memorises the training folds (train 0.953 vs CV 0.685); the chosen setting sits between memorising and underfitting.</p></div>
+  </section>
+
+  <section id="leakage">
+    <h2>Why we split by person</h2>
+    <p class="sub">Same models, same training data, two ways of cross-validating. A random split puts windows from the same person in both training and validation, so a flexible model gets credit for recognising <em>people</em> rather than activities.</p>
+    <div class="card"><div class="chart" id="chart-leak"></div></div>
+    <p class="note" id="leak-note"></p>
+  </section>
+
   <section id="results">
-    <h2>How good is each model on new people?</h2>
+    <h2>Results: how good is each model on new people?</h2>
     <p class="sub">Macro-F1 on the 50 test participants (each class counts equally). Lines are 95% intervals from resampling the 50 <em>people</em>, not the windows, because windows from one person are strongly correlated.</p>
     <div class="card">
       <div class="chart" id="chart-models" role="img" aria-label="Test macro-F1 with 95% intervals for four models"></div>
-      <details class="table-view"><summary>Show as table</summary><div id="table-models"></div></details>
+      <details class="table-view" open><summary>Table</summary><div id="table-models"></div></details>
     </div>
     <p id="diff-text" class="callout"></p>
 
@@ -54,12 +159,12 @@
       <div class="card"><div id="cm-main"></div></div>
       <div class="card"><h4 class="card-title">Recall by class</h4><div class="chart" id="recall-main"></div></div>
     </div>
-    <p class="note">Most errors are between neighbouring intensity levels: sedentary predicted as light is the single biggest confusion. Sleep and moderate-vigorous are almost never mixed up.</p>
+    <p class="note">Sleep is easiest (forest F1 0.900) and moderate-vigorous hardest (F1 0.546: recall 0.674 but precision 0.459, so many of its predictions are false alarms). Most errors are between neighbouring intensity levels. Logistic regression sends 32% of sedentary windows to sleep, against 11% for the tree and 9% for the forest, so non-linear thresholds matter for telling very still sitting from sleep. Test scores are slightly above cross-validation scores (forest 0.700 vs 0.697, tree 0.673 vs 0.628), probably because the final models use 10 times more training data and the test people differ; we do not read more into it.</p>
   </section>
 
   <section id="budget">
     <h2>Feature budget: how few features are enough?</h2>
-    <p class="sub">Features are ranked by random-forest importance on the training people. Slide to keep only the top <i>k</i>. The <b>solid line</b> is cross-validation on training people (used to pick the compact budget, with a band of ±1 standard deviation); the <b>dashed line</b> is the test set, shown for information only. These models are trained on a 10% subsample of windows, so at <i>k</i> = 16 they differ slightly from the headline models above.</p>
+    <p class="sub">Features are ranked by random-forest importance on the training people (re-ranked inside every fold). Slide to keep only the top <i>k</i>. The <b>solid line</b> is cross-validation on training people (used to pick the compact budget, with a band of ±1 standard deviation); the <b>dashed line</b> is the test set, shown for information only. These models are trained on the 10% tuning subsample, so at <i>k</i> = 16 they differ slightly from the headline models above.</p>
     <div class="controls">
       <div class="seg" id="bud-model" role="radiogroup" aria-label="Model"></div>
       <label class="slider"><span>Features kept: <output id="k-out">8</output> of 16</span>
@@ -78,7 +183,28 @@
   </section>
 
   <section id="people">
-    <h2>Does it work equally well for everyone?</h2>
+    <h2>Error analysis</h2>
+    <h3 class="h3" style="margin-top:8px">What do the misclassified windows look like?</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4 class="card-title">Most frequent confusions (random forest)</h4>
+        <div class="table-scroll"><table><thead><tr><th>True → predicted</th><th>Windows</th><th>Share of true class</th></tr></thead><tbody>
+          <tr><td>sedentary → light</td><td>20,234</td><td>17.9%</td></tr>
+          <tr><td>light → sedentary</td><td>11,983</td><td>19.1%</td></tr>
+          <tr><td>light → moderate-vigorous</td><td>11,196</td><td>17.8%</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="card">
+        <h4 class="card-title">Median movement of sedentary windows predicted as light</h4>
+        <div class="table-scroll"><table><thead><tr><th></th><th>Sedentary, correct</th><th>Sedentary → light</th><th>Light, correct</th></tr></thead><tbody>
+          <tr><td>m_std</td><td>0.027</td><td><b>0.126</b></td><td>0.165</td></tr>
+          <tr><td>m_max</td><td>1.17</td><td><b>1.78</b></td><td>1.94</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+    <p class="note">The sedentary windows called "light" move like light activity, not like sitting still. Sitting while gesturing, eating or fidgeting would look like this. Ten-second summaries of wrist movement cannot separate them, and camera/diary labels at that boundary are probably noisy too. A few errors are not explained by movement (for example a sedentary window with m_std 0.008 predicted as light), so wrist orientation also plays a part.</p>
+
+    <h3 class="h3">Does it work equally well for everyone?</h3>
     <p class="sub">Each dot is one test person (shuffled and unnamed). Click a dot or use the list to see that person's activity mix and how well each of their classes was recognised by the random forest.</p>
     <div class="controls">
       <label class="select"><span>Person</span><select id="person-select"></select></label>
@@ -86,20 +212,16 @@
     </div>
     <div class="card"><div class="chart" id="chart-people"></div></div>
     <div class="card" id="person-detail" aria-live="polite"></div>
+    <p class="note">Per-person balanced accuracy ranges from 0.53 to 0.85 (median 0.72). Most of the five lowest people do very little moderate-vigorous activity, or are mostly asleep, and balanced accuracy weights each class equally, so a few missed windows of a rare class pull them down sharply. Of the 46 people with at least 20 moderate-vigorous windows, 5 have recall below 0.3. The clearest case does 22% moderate-vigorous activity (1,383 windows), yet 76% of it was predicted as light: their vigorous activity probably moves the wrist little, which these features cannot see.</p>
+    <figure class="fig" style="max-width:820px"><a href="data/figures/per_person.png" target="_blank" rel="noopener"><img src="data/figures/per_person.png" alt="Histogram of per-person balanced accuracy, and scatter of moderate-vigorous recall against share"></a><figcaption>Left: spread over the 50 test people. Right: moderate-vigorous recall against how much of it each person does (click to enlarge).</figcaption></figure>
+
     <h3 class="h3">Groups</h3>
     <p class="sub">Group-level results only. With 9 to 34 people per group, these differences are descriptive, not evidence of bias.</p>
     <div class="card"><div id="table-groups"></div></div>
   </section>
 
-  <section id="leakage">
-    <h2>Why we split by person</h2>
-    <p class="sub">Same models, same training data, two ways of cross-validating. A random split puts windows from the same person in both training and validation, so a flexible model gets credit for recognising <em>people</em> rather than activities.</p>
-    <div class="card"><div class="chart" id="chart-leak"></div></div>
-    <p class="note" id="leak-note"></p>
-  </section>
-
   <section id="data-enough">
-    <h2>Would more people help?</h2>
+    <h2>Would more people help? And do the recording gaps matter?</h2>
     <p class="sub">Inside the training set: 20 people held out for validation, and the forest trained on 5 to 81 of the others (3 random draws each, one at 81).</p>
     <div class="grid-2">
       <div class="card"><div class="chart" id="chart-lc"></div></div>
@@ -110,59 +232,40 @@
     </div>
   </section>
 
-  <section id="method">
-    <h2>Method</h2>
-    <div class="cols">
-      <div>
-        <h3>Models</h3>
-        <ul>
-          <li><b>Majority class</b>: always predicts the most common class (the floor).</li>
-          <li><b>Logistic regression</b>: linear baseline, features standardised inside each training fold.</li>
-          <li><b>Decision tree</b>, depth ≤ 6: the compact model; readable threshold rules.</li>
-          <li><b>Random forest</b>: the larger model; many deep trees averaged.</li>
-        </ul>
-        <p>All use balanced class weights so the rare moderate-vigorous class is not ignored. Settings are chosen by 5-fold <code>GroupKFold</code> (grouped by person) on every 10th training window.</p>
-        <p id="best-params"></p>
-      </div>
-      <div>
-        <h3>Evaluation</h3>
-        <ul>
-          <li><b>Split:</b> CAPTURE-24 benchmark split, P001–P101 train, P102–P151 test. No person is in both.</li>
-          <li><b>Metric:</b> macro-F1, plus balanced accuracy, per-class recall and confusion matrices. Plain accuracy would reward predicting sleep and sedentary.</li>
-          <li><b>Test set used once.</b> Every choice (settings, feature budget, which model is compact) came from cross-validation on training people.</li>
-          <li><b>Uncertainty:</b> 1,000 bootstrap resamples of the 50 test people; model differences use paired resamples.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
   <section id="limits">
     <h2>Limitations</h2>
     <ul class="limits">
-      <li><b>Only 50 test people.</b> Intervals are wide, and individual results range widely.</li>
-      <li><b>Rare class.</b> Moderate-vigorous is 4–6% of windows; 27 of 151 people have under 0.5%. Its F1 is the lowest, and many of its predictions are false alarms.</li>
-      <li><b>Simple features.</b> 16 summary statistics lose rhythm and frequency information. Many sedentary windows predicted as light really do move like light activity.</li>
+      <li><b>Only 50 test people.</b> The forest's 95% interval is 0.673–0.726, and per-person results range from 0.53 to 0.85.</li>
+      <li><b>Rare class.</b> Moderate-vigorous is 4–6% of windows and 27 of 151 people have under 0.5%. Its F1 is the lowest (0.546), and many of its predictions are false alarms.</li>
+      <li><b>Simple features.</b> 16 summary statistics lose rhythm, frequency and posture-change information. The learning curve is flat after about 40 people, so the features, not the number of people, are the main limit.</li>
       <li><b>Windows are classified one at a time.</b> Activities follow each other in time; smoothing over neighbouring windows (as the CAPTURE-24 benchmark does with an HMM) is future work.</li>
-      <li><b>Label noise.</b> Labels come from camera images and diaries, and about a third of windows had no label, so results describe labelled time only.</li>
-      <li><b>Scope.</b> One device on the wrist, adults in one free-living study. Results say nothing about other devices or populations, and predictions are not causal explanations.</li>
+      <li><b>Label noise.</b> Labels come from camera images and diaries, so the sedentary/light boundary is uncertain, and about a third of windows had no label, so results describe labelled time only.</li>
+      <li><b>Tuning on a subsample.</b> Settings were tuned on every 10th window, and the forest's leaf size was given as a fraction of rows, so the final full-data forest has larger leaves than the tuned one.</li>
+      <li><b>Scope.</b> One wrist device, adults in one free-living study. Age/sex groups have 9–34 people. Results say nothing about other devices or populations, and predictions are not causal explanations.</li>
+    </ul>
+    <h3 class="h3">Disclosures</h3>
+    <ul class="limits">
+      <li><b>Pilot.</b> Before the final notebook we ran one untuned pilot that looked at test scores as a feasibility check (forest macro-F1 0.707). No setting was chosen from it or from any test score.</li>
+      <li><b>Noticed after testing.</b> The feature-budget forest with all 16 features scores 0.713 on test, above the headline forest's 0.700, probably because a leaf size given as a fraction means much larger leaves on the full data. We noticed this after the test run, so we kept 0.700 as the headline and changed nothing.</li>
     </ul>
   </section>
 
   <section id="figures-sec" hidden>
-    <h2>Notebook figures</h2>
+    <h2>All notebook figures</h2>
     <div class="gallery" id="gallery"></div>
   </section>
 
   <section id="reproduce">
-    <h2>Reproduce and credits</h2>
+    <h2>Reproduce, code and credits</h2>
     <p id="links"></p>
-    <p><b>Data:</b> CAPTURE-24 (Chan et al., <i>Scientific Data</i> 2024; Oxford Research Archive, <a href="https://doi.org/10.5287/bodleian:NGx0JOMP5">DOI 10.5287/bodleian:NGx0JOMP5</a>, CC BY 4.0), used through a Kaggle copy. The train/test split, 10 s windows and Walmsley2020 label grouping follow the <a href="https://github.com/OxWearables/capture24">CAPTURE-24 benchmark</a>. Raw data is not re-published here, and no participant IDs or personal details are shown next to individual results.</p>
-    <p><b>AI use:</b> we used Claude (Anthropic) for brainstorming, code drafting, debugging and help with wording and this website. We ran every step ourselves and can explain it.</p>
+    <p>The repository holds both notebooks with their outputs, the full result files (including cross-validation results and the exact train/test participant lists), and a README with setup and run steps.</p>
+    <p><b>Data:</b> CAPTURE-24 (Chan et al., <a href="https://doi.org/10.1038/s41597-024-03960-3"><i>Scientific Data</i> 11, 1135, 2024</a>; Oxford Research Archive, <a href="https://doi.org/10.5287/bodleian:NGx0JOMP5">DOI 10.5287/bodleian:NGx0JOMP5</a>, CC BY 4.0), used through its <a href="https://www.kaggle.com/datasets/kooaslansefat/capture-24-human-activity-recognition">Kaggle copy</a>. The train/test split, 10 s windows and Walmsley2020 label grouping follow the <a href="https://github.com/OxWearables/capture24">CAPTURE-24 benchmark</a>. Raw data is not re-published here, and no participant IDs or personal details are shown next to individual results on this page.</p>
+    <p><b>AI use:</b> we used Claude (Anthropic) to brainstorm the project design, draft and debug code, review our outputs, suggest wording and build this website. We ran every step ourselves, checked the numbers against the notebook outputs, and can explain every step.</p>
   </section>
 </main>
 
 <footer class="site-footer"><div class="wrap">ES 335 course project · <span id="team-foot"></span></div></footer>
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>
