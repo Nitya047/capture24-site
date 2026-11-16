@@ -5,7 +5,7 @@
 const LINKS = {
   modelling: "https://www.kaggle.com/code/nityanandkarmali/modelling",      // e.g. https://www.kaggle.com/code/<user>/capture24-modelling
   preprocessing: "https://www.kaggle.com/code/nityanandkarmali/preprocessing",  // e.g. https://www.kaggle.com/code/<user>/capture24-preprocessing
-  repo: "",           // e.g. https://github.com/<user>/<repo>
+  repo: "https://github.com/Nitya047/capture24-site",           // e.g. https://github.com/<user>/<repo>
 };
 const TEAM = "Nityanand Karmali · Amartya Tuljapurkar";
 
