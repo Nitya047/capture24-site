@@ -111,10 +111,15 @@ http://localhost:8000 (opening `index.html` directly from disk will not load the
 
 ## AI use
 
-We used Claude (Anthropic) to brainstorm the project design, draft and debug the notebook code,
-review our outputs, suggest wording for the interpretation text, and build this website. We ran every
-notebook ourselves on Kaggle, checked every reported number against the notebook outputs, rewrote the
-text in our own words, and can explain every step.
+We used Claude (Anthropic) as an assistant throughout the project, for:
+
+- Drafting code for the preprocessing and modelling notebooks, and helping us check syntax, find errors and debug them;
+- Reviewing and refining the modelling approach and evaluation design, which we discussed and then decided on;
+- Improving the readability, structure and correctness of the code;
+- Drafting the interpretation text, which we reviewed and edited against our outputs;
+- Building and refining the project website and its content.
+
+We chose the question and dataset, ran both notebooks ourselves on Kaggle, checked every reported number against the notebook outputs, interpreted the results, and made all final decisions about the analysis and what to report. Claude did not run the analysis or produce the results; responsibility for the work and its conclusions is ours, and we can explain every step.
 
 ## Citations
 

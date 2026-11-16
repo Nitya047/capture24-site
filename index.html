@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Activity Recognition for Unseen Users</title>
 <meta name="description" content="ES 335 project: recognising sleep, sedentary, light and moderate-vigorous activity from wrist accelerometer data for people the model has never seen, and how much a compact model gives up.">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 <header class="site-header">
@@ -264,12 +264,12 @@
     <p id="links"></p>
     <p>The repository holds both notebooks with their outputs, the full result files (including cross-validation results and the exact train/test participant lists), and a README with setup and run steps.</p>
     <p><b>Data:</b> CAPTURE-24 (Chan et al., <a href="https://doi.org/10.1038/s41597-024-03960-3"><i>Scientific Data</i> 11, 1135, 2024</a>; Oxford Research Archive, <a href="https://doi.org/10.5287/bodleian:NGx0JOMP5">DOI 10.5287/bodleian:NGx0JOMP5</a>, CC BY 4.0), used through its <a href="https://www.kaggle.com/datasets/kooaslansefat/capture-24-human-activity-recognition">Kaggle copy</a>. The train/test split, 10 s windows and Walmsley2020 label grouping follow the <a href="https://github.com/OxWearables/capture24">CAPTURE-24 benchmark</a>. Raw data is not re-published here, and no participant IDs or personal details are shown next to individual results on this page.</p>
-    <p><b>AI use:</b> we used Claude (Anthropic) to brainstorm the project design, draft and debug code, review our outputs, suggest wording and build this website. We ran every step ourselves, checked the numbers against the notebook outputs, and can explain every step.</p>
+    <div class="ai-use"><p><b>AI use:</b> we used Claude (Anthropic) as an assistant throughout the project, for:</p><ul><li>drafting code for the preprocessing and modelling notebooks, and helping us check syntax, find errors and debug them;</li><li>reviewing and refining the modelling approach and evaluation design, which we discussed and then decided on;</li><li>improving the readability, structure and correctness of the code;</li><li>drafting the interpretation text, which we reviewed and edited against our outputs;</li><li>building and refining the project website and its content.</li></ul><p>We chose the question and dataset, ran both notebooks ourselves on Kaggle, checked every reported number against the notebook outputs, interpreted the results, and made all final decisions about the analysis and what to report. Claude did not run the analysis or produce the results; responsibility for the work and its conclusions is ours, and we can explain every step.</p></div>
   </section>
 </main>
 
 <footer class="site-footer"><div class="wrap">ES 335 course project · <span id="team-foot"></span></div></footer>
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="app.js?v=9"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>
