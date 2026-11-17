@@ -472,10 +472,13 @@ function renderMethodBits() {
   if (bp.forest) parts.push(`forest max_features = ${bp.forest.max_features}, minimum leaf ${pct(bp.forest.min_samples_leaf, 2)} of rows`);
   if ($("#best-params")) $("#best-params").innerHTML = parts.length ? `<b>Chosen settings:</b> ${esc(parts.join("; "))}.` : "";
   const L = [];
-  if (LINKS.modelling) L.push(`<a href="${esc(LINKS.modelling)}">Modelling notebook (Kaggle)</a>`);
-  if (LINKS.preprocessing) L.push(`<a href="${esc(LINKS.preprocessing)}">Preprocessing notebook (Kaggle)</a>`);
-  if (LINKS.repo) L.push(`<a href="${esc(LINKS.repo)}">Website source (GitHub)</a>`);
-  $("#links").innerHTML = L.length ? `<b>Code:</b> ${L.join(" · ")}. Run the preprocessing notebook, then the modelling notebook (seed 42).` : "";
+  if (LINKS.repo) {
+    L.push(`<a href="${esc(LINKS.repo)}/blob/main/notebooks/modelling.ipynb">Modelling notebook with outputs</a>`);
+    L.push(`<a href="${esc(LINKS.repo)}/blob/main/notebooks/preprocessing.ipynb">Preprocessing notebook with outputs</a>`);
+  }
+  if (LINKS.preprocessing) L.push(`<a href="${esc(LINKS.preprocessing)}">Preprocessing on Kaggle</a>`);
+  if (LINKS.repo) L.push(`<a href="${esc(LINKS.repo)}">Full repository and README</a>`);
+  $("#links").innerHTML = L.length ? `<b>Code:</b> ${L.join(" · ")}. Run the preprocessing notebook, then the modelling notebook (seed 42); the README has step-by-step instructions.` : "";
 }
 function renderGallery() {
   const figs = [["data_overview.png", "Class counts and moderate-vigorous share per person"], ["features_by_class.png", "Movement variability by class, and feature correlations (training people)"],

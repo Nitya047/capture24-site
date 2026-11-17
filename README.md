@@ -49,6 +49,8 @@ Both notebooks are public on Kaggle and run there with no setup:
 
 - Preprocessing: https://www.kaggle.com/code/nityanandkarmali/preprocessing
 - Modelling: https://www.kaggle.com/code/nityanandkarmali/modelling
+  (the run with outputs is **Version 6**; if the page shows an older version, choose Version 6 from the
+  version menu at the top right, or read the same notebook with outputs in `notebooks/modelling.ipynb`)
 
 **Shortcut (check the modelling only, about 1 hour):** open the modelling notebook → **Copy & Edit**.
 It already uses our public features dataset as input
